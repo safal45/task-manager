@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db";
 import taskRoutes from "./routes/taskRoutes";
+import errorHandler from "./middleware/errorHandler";
 
 dotenv.config();
 
@@ -16,7 +17,13 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/tasks", taskRoutes);
-
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
+});
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001;
 

@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
+import mongoose from "mongoose";
 import Task from "../models/task";
-// Create Task
+
+// Cre task
 export const createTask = async (
   req: Request,
   res: Response,
@@ -9,7 +11,7 @@ export const createTask = async (
   try {
     const { title } = req.body;
 
-    if (!title || title.trim() === "") {
+    if (typeof title !== "string") {
       res.status(400).json({
         success: false,
         message: "Title is required",
@@ -17,12 +19,31 @@ export const createTask = async (
       return;
     }
 
+    const trimmedTitle = title.trim();
+
+    if (trimmedTitle.length === 0) {
+      res.status(400).json({
+        success: false,
+        message: "Title cannot be empty",
+      });
+      return;
+    }
+
+    if (trimmedTitle.length > 200) {
+      res.status(400).json({
+        success: false,
+        message: "Title cannot exceed 200 characters",
+      });
+      return;
+    }
+
     const task = await Task.create({
-      title: title.trim(),
+      title: trimmedTitle,
     });
 
     res.status(201).json({
       success: true,
+      message: "Task created successfully",
       data: task,
     });
   } catch (error) {
@@ -58,6 +79,14 @@ export const toggleTask = async (
   try {
     const { id } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(id as string )) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid task id",
+      });
+      return;
+    }
+
     const task = await Task.findById(id);
 
     if (!task) {
@@ -74,6 +103,7 @@ export const toggleTask = async (
 
     res.status(200).json({
       success: true,
+      message: "Task updated successfully",
       data: task,
     });
   } catch (error) {
@@ -89,6 +119,14 @@ export const deleteTask = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id as string)) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid task id",
+      });
+      return;
+    }
 
     const task = await Task.findByIdAndDelete(id);
 
